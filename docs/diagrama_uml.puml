@@ -1,0 +1,90 @@
+@startuml
+
+class Produto {
+  +id: int
+  +nome: str
+  +categoria: str
+  +preco_unitario: float
+  +estoque_atual: int
+  +estoque_minimo: int
+  +lead_time_dias: int
+  +calcular_ponto_pedido(demanda_media_diaria, estoque_seguranca): int
+  +alerta_estoque_baixo(ponto_pedido): bool
+}
+
+class Venda {
+  +id: int
+  +data: datetime
+  +produto_id: int
+  +quantidade: int
+  +valor_total: float
+}
+
+class Compra {
+  +id: int
+  +data: datetime
+  +produto_id: int
+  +quantidade: int
+  +custo_total: float
+}
+
+class Previsao {
+  +id: int
+  +data_geracao: datetime
+  +produto_id: int
+  +periodo_inicio: date
+  +periodo_fim: date
+  +quantidade_prevista: float
+  +modelo_usado: str
+}
+
+class Usuario {
+  +id: int
+  +username: str
+  +senha_hash: str
+  +perfil: str
+  +definir_senha(senha_plana): None
+  +verificar_senha(senha_plana): bool
+}
+
+interface Repositorio {
+  +adicionar(entidade)
+  +obter_por_id(id): entidade
+  +listar(): list
+  +atualizar(entidade)
+  +remover(id): bool
+}
+
+interface ModeloIA {
+  +treinar(dados_historicos)
+  +prever(passos_futuros)
+  +salvar_modelo(caminho)
+  +carregar_modelo(caminho)
+}
+
+class RepositorioBase
+class ModeloPrevisaoDemanda
+class InventarioController
+class PrevisaoController
+class MainWindow
+class DashboardWidget
+
+Repositorio <|.. RepositorioBase
+RepositorioBase <|-- ProdutoRepositorio
+RepositorioBase <|-- VendaRepositorio
+RepositorioBase <|-- CompraRepositorio
+RepositorioBase <|-- UsuarioRepositorio
+ModeloIA <|.. ModeloPrevisaoDemanda
+ModeloPrevisaoDemanda --> Previsao
+InventarioController --> Produto
+InventarioController --> Venda
+InventarioController --> Compra
+PrevisaoController --> ModeloPrevisaoDemanda
+PrevisaoController --> Previsao
+MainWindow --> InventarioController
+MainWindow --> PrevisaoController
+MainWindow --> DashboardWidget
+DashboardWidget --> PrevisaoController
+DashboardWidget --> InventarioController
+
+@enduml

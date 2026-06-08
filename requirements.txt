@@ -1,0 +1,11 @@
+PySide6>=6.6.0
+SQLAlchemy>=2.0.23
+pandas>=2.1.0
+numpy>=1.24.0
+scikit-learn>=1.3.0
+matplotlib>=3.7.0
+plotly>=5.17.0  # para gráficos interativos (opcional, mas bonito)
+python-dotenv>=1.0.0
+bcrypt>=4.0.0    # para hash de senhas
+PyPDF2>=3.0.0    # para leitura do enunciado PDF
+pytest>=8.0.0    # testes unitários e de integração
