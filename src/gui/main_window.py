@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtGui import QAction, QColor
 from PySide6.QtCore import Qt, QTimer
 from src.controllers.inventario_controller import InventarioController
+from src.controllers.ia_controller import IAController
 from src.controllers.previsao_controller import PrevisaoController
 from src.gui.produto_dialog import ProdutoDialog
 from src.gui.venda_dialog import VendaDialog
@@ -26,6 +27,7 @@ class MainWindow(QMainWindow):
 
         self.inventario_controller = InventarioController()
         self.previsao_controller = PrevisaoController()
+        self.ia_controller = IAController()
 
         self._criar_toolbar()
         self._criar_widget_central()
@@ -129,8 +131,12 @@ class MainWindow(QMainWindow):
         self.tabs.setDocumentMode(True)
         
         self.tab_produtos = QWidget()
-        self.tab_dashboard = DashboardWidget(self.previsao_controller, self.inventario_controller)
-        
+        self.tab_dashboard = DashboardWidget(
+            self.previsao_controller,
+            self.inventario_controller,
+            self.ia_controller
+        )
+
         self.tabs.addTab(self.tab_produtos, "Produtos & Estoque")
         self.tabs.addTab(self.tab_dashboard, "Dashboard & Previsão")
         

@@ -4,7 +4,8 @@ Widget de dashboard para exibir gráficos de vendas e previsão de demanda.
 """
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout,
-    QPushButton, QComboBox, QLabel, QMessageBox
+    QPushButton, QComboBox, QLabel, QMessageBox,
+    QInputDialog
 )
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas                                             # pyright: ignore[reportPrivateImportUsage]
 from matplotlib.figure import Figure
@@ -22,12 +23,14 @@ class DashboardWidget(QWidget):
     def __init__(
         self,
         previsao_controller: PrevisaoController,
-        inventario_controller: InventarioController
+        inventario_controller: InventarioController,
+        ia_controller: "IAController" # pyright: ignore[reportUndefinedVariable]
     ):
         super().__init__()
         self.setStyleSheet(get_app_style())
         self.previsao_controller = previsao_controller
         self.inventario_controller = inventario_controller
+        self.ia_controller = ia_controller
         self.setup_ui()
         self.carregar_produtos_combo()
 
@@ -39,12 +42,21 @@ class DashboardWidget(QWidget):
         sel_layout = QHBoxLayout()
         self.label_produto = QLabel("Produto:")
         self.combo_produtos = QComboBox()
+        self.combo_produtos.currentIndexChanged.connect(self.on_produto_trocado)
         self.btn_prever = QPushButton("Gerar Previsão de Demanda")
         self.btn_prever.clicked.connect(self.gerar_previsao)
+
+        self.btn_classificar = QPushButton("Classificar Demanda")
+        self.btn_classificar.clicked.connect(self.classificar_demanda)
+
+        self.btn_sentimento = QPushButton("Analisar Feedback")
+        self.btn_sentimento.clicked.connect(self.analisar_feedback)
 
         sel_layout.addWidget(self.label_produto)
         sel_layout.addWidget(self.combo_produtos)
         sel_layout.addWidget(self.btn_prever)
+        sel_layout.addWidget(self.btn_classificar)
+        sel_layout.addWidget(self.btn_sentimento)
         sel_layout.addStretch()
         layout.addLayout(sel_layout)
 
@@ -64,6 +76,41 @@ class DashboardWidget(QWidget):
         self.combo_produtos.clear()
         for p in produtos:
             self.combo_produtos.addItem(f"{p.nome} (ID: {p.id})", p.id)
+
+        if self.combo_produtos.count() > 0:
+            self.combo_produtos.setCurrentIndex(0)
+            self.atualizar_dashboard_inicial()
+
+    def on_produto_trocado(self, index: int) -> None:
+        if index >= 0:
+            self.atualizar_dashboard_inicial()
+
+    def atualizar_dashboard_inicial(self) -> None:
+        produto_id = self.combo_produtos.currentData()
+        if not produto_id:
+            self.figure.clear()
+            self.canvas.draw()
+            self.label_metricas.setText("Nenhum produto selecionado.")
+            return
+
+        historico = self.previsao_controller.venda_repo.obter_historico_por_produto(
+            produto_id, dias=90
+        )
+
+        if len(historico) < 2:
+            self.figure.clear()
+            self.canvas.draw()
+            self.label_metricas.setText(
+                "É necessário pelo menos 2 registros de vendas para exibir o gráfico histórico. "
+                "Registre mais vendas e tente novamente."
+            )
+            return
+
+        self.plotar_grafico(historico, pd.DataFrame(), None, None)
+        self.label_metricas.setText(
+            "Gráfico de vendas históricas carregado. "
+            "Clique em Gerar Previsão para ver a previsão de demanda."
+        )
 
     def gerar_previsao(self) -> None:
         """Dispara o processo de previsão e exibe o gráfico."""
@@ -132,6 +179,59 @@ class DashboardWidget(QWidget):
             )
         else:
             self.label_metricas.setText("")
+
+    def classificar_demanda(self) -> None:
+        produto_id = self.combo_produtos.currentData()
+        if not produto_id:
+            QMessageBox.warning(self, "Atenção", "Selecione um produto.")
+            return
+
+        try:
+            resultado = self.ia_controller.classificar_demanda(produto_id)
+            probabilidades = "\n".join(
+                f"{classe}: {prob:.2%}"
+                for classe, prob in resultado["probabilidades"].items()
+            )
+            QMessageBox.information(
+                self,
+                "Classificação de Demanda",
+                (
+                    f"Classe prevista: {resultado['classe_prevista']}\n"
+                    f"Status do modelo: {resultado['modelo_status']}\n\n"
+                    f"Probabilidades:\n{probabilidades}"
+                )
+            )
+        except Exception as e:
+            QMessageBox.critical(self, "Erro de Classificação", str(e))
+
+    def analisar_feedback(self) -> None:
+        texto, ok = QInputDialog.getMultiLineText(
+            self,
+            "Análise de Sentimento",
+            "Digite o feedback do cliente:",
+            ""
+        )
+        if not ok or not texto.strip():
+            return
+
+        try:
+            resultado = self.ia_controller.analisar_feedback(texto)
+            probabilidades = "\n".join(
+                f"{classe}: {prob:.2%}"
+                for classe, prob in resultado["probabilidades"].items()
+            )
+            QMessageBox.information(
+                self,
+                "Resultado de Sentimento",
+                (
+                    f"Texto: {resultado['texto']}\n"
+                    f"Sentimento: {resultado['sentimento']}\n"
+                    f"Status do modelo: {resultado['modelo_status']}\n\n"
+                    f"Probabilidades:\n{probabilidades}"
+                )
+            )
+        except Exception as e:
+            QMessageBox.critical(self, "Erro de Sentimento", str(e))
 
     def atualizar_graficos(self) -> None:
         """Recarrega a lista de produtos e limpa o gráfico."""

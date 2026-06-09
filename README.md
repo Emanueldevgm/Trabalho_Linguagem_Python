@@ -44,6 +44,30 @@ python main.py
 - `data/` — dados e exemplos
 - `docs/` — documentação
 
+## Inteligência Artificial
+
+O sistema já conta com três funcionalidades de IA:
+
+- Previsão de demanda (regressão) usando `src/ia/modelo_previsao.py`
+  - carrega o modelo salvo em `models/modelo_previsao_produto_{produto_id}.pkl`
+  - se não existir, treina a partir do histórico de vendas
+  - processa entradas com colunas `data` e `quantidade`
+  - retorna um `DataFrame` com `data_previsao` e `quantidade_prevista`
+- Classificação de demanda usando `src/ia/modelo_classificacao.py`
+  - classifica o nível de demanda de um produto como `baixo`, `medio` ou `alto`
+  - treina com séries históricas e salva o modelo em `models/modelo_classificacao_demanda.pkl`
+  - expõe probabilidades por classe
+- Análise de sentimento de feedback usando `src/ia/modelo_sentimento.py`
+  - usa TF-IDF e regressão logística para classificar feedbacks como `positivo` ou `negativo`
+  - carrega ou treina o modelo em `models/modelo_sentimento_feedback.pkl`
+  - retorna o sentimento e as probabilidades de cada classe
+
+O dashboard também inclui botões para:
+
+- gerar previsão de demanda
+- classificar o nível de demanda de um produto
+- analisar o sentimento de um texto de feedback
+
 ## Seguir
 
 Revise os arquivos gerados, ajuste `README.md` e adicione licença se desejar.
