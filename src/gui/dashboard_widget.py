@@ -9,6 +9,8 @@ from PySide6.QtWidgets import (
 )
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas                                             # pyright: ignore[reportPrivateImportUsage]
 from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
+import matplotlib.cm
 import pandas as pd
 from typing import Optional
 
@@ -52,11 +54,19 @@ class DashboardWidget(QWidget):
         self.btn_sentimento = QPushButton("Analisar Feedback")
         self.btn_sentimento.clicked.connect(self.analisar_feedback)
 
+        self.btn_pizza = QPushButton("Mostrar Distribuição (Pizza)")
+        self.btn_pizza.clicked.connect(self.mostrar_grafico_pizza)
+
+        self.btn_voltar = QPushButton("Voltar ao Histórico")
+        self.btn_voltar.clicked.connect(self.gerar_previsao)
+
         sel_layout.addWidget(self.label_produto)
         sel_layout.addWidget(self.combo_produtos)
         sel_layout.addWidget(self.btn_prever)
         sel_layout.addWidget(self.btn_classificar)
         sel_layout.addWidget(self.btn_sentimento)
+        sel_layout.addWidget(self.btn_pizza)
+        sel_layout.addWidget(self.btn_voltar)
         sel_layout.addStretch()
         layout.addLayout(sel_layout)
 
@@ -232,6 +242,90 @@ class DashboardWidget(QWidget):
             )
         except Exception as e:
             QMessageBox.critical(self, "Erro de Sentimento", str(e))
+
+    def mostrar_grafico_pizza(self) -> None:
+        """Mostra um gráfico tipo pizza com a distribuição de vendas."""
+        produto_id = self.combo_produtos.currentData()
+        if not produto_id:
+            QMessageBox.warning(self, "Atenção", "Selecione um produto.")
+            return
+
+        try:
+            historico = self.previsao_controller.venda_repo.obter_historico_por_produto(
+                produto_id, dias=30
+            )
+
+            if historico.empty:
+                QMessageBox.warning(self, "Atenção", "Nenhum dado de vendas disponível.")
+                return
+
+            self.plotar_pizza(historico)
+            self.label_metricas.setText("Gráfico de distribuição de vendas (pizza). Clique em 'Voltar ao Histórico' para retornar.")
+        except Exception as e:
+            QMessageBox.critical(self, "Erro ao Gerar Pizza", str(e))
+
+    def plotar_pizza(self, historico: pd.DataFrame) -> None:
+        """Plota um gráfico tipo pizza mostrando a distribuição de vendas por data."""
+        self.figure.clear()
+        self.figure.patch.set_facecolor('#F9FAFB')
+        ax = self.figure.add_subplot(111)
+        ax.set_facecolor('#F9FAFB')
+
+        if historico.empty or 'data' not in historico.columns or 'quantidade' not in historico.columns:
+            ax.text(0.5, 0.5, 'Dados insuficientes', ha='center', va='center', fontsize=12)
+            self.figure.tight_layout()
+            self.canvas.draw()
+            return
+
+        produto_id = self.combo_produtos.currentData()
+        produto = self.inventario_controller.produto_repo.obter_por_id(produto_id)
+        
+        datas = pd.to_datetime(historico['data']).dt.strftime('%d/%m').values
+        quantidades = historico['quantidade'].values
+
+        # Paleta de cores moderna e vibrante
+        cores_personalizadas = [
+            '#2563EB', '#059669', '#D97706', '#DC2626', '#7C3AED',
+            '#0891B2', '#E11D48', '#EA580C', '#06B6D4', '#10B981'
+        ]
+        cores = cores_personalizadas[:len(quantidades)]
+        
+        # Efeito explode para destacar os setores
+        explode = tuple([0.05] * len(quantidades))
+        
+        wedges, texts, autotexts = ax.pie(
+            quantidades,
+            labels=datas,
+            autopct='%1.1f%%',
+            startangle=90,
+            colors=cores,
+            explode=explode,
+            shadow=True,
+            textprops={'fontsize': 10, 'weight': 'bold'}
+        )
+
+        # Melhorar aparência dos percentuais
+        for autotext in autotexts:
+            autotext.set_color('white')
+            autotext.set_fontsize(10)
+            autotext.set_weight('bold')
+
+        # Melhorar aparência dos labels (datas)
+        for text in texts:
+            text.set_fontsize(11)
+            text.set_weight('bold')
+            text.set_color('#1F2937')
+
+        ax.set_title(
+            f"Distribuição de Vendas - {produto.nome}",
+            fontsize=16,
+            fontweight='bold',
+            color='#111827',
+            pad=20
+        )
+        
+        self.figure.tight_layout()
+        self.canvas.draw()
 
     def atualizar_graficos(self) -> None:
         """Recarrega a lista de produtos e limpa o gráfico."""
