@@ -1,4 +1,4 @@
-# src/controllers/previsao_controller.py
+                                        
 import pandas as pd
 import joblib
 import os
@@ -68,7 +68,7 @@ class ModeloPrevisaoDemanda(ModeloIA):
         dados_atuais = self.dados_treino.copy()
         for i in range(passos_futuros):
             data_previsao = ultima_data + timedelta(days=i + 1)
-            # Criar features para essa data usando últimos valores conhecidos
+                                                                             
             nova_linha = {
                 'data': data_previsao,
                 'dia_semana': data_previsao.weekday(),
@@ -85,7 +85,7 @@ class ModeloPrevisaoDemanda(ModeloIA):
                 'data_previsao': data_previsao,
                 'quantidade_prevista': max(0, int(round(pred)))
             })
-            # Atualiza dados_atuais com a previsão para o próximo passo
+                                                                       
             nova_linha['quantidade'] = pred
             dados_atuais = pd.concat([dados_atuais, pd.DataFrame([nova_linha])], ignore_index=True)
         return pd.DataFrame(previsoes)
@@ -117,7 +117,7 @@ class PrevisaoController:
 
     @log_execucao
     def gerar_previsao(self, produto_id: int, dias_futuros: int = 30) -> tuple[pd.DataFrame, dict]:
-        # Obter histórico dos últimos 90 dias
+                                             
         historico = self.venda_repo.obter_historico_por_produto(produto_id, dias=90)
         if len(historico) < 14:
             raise DadosInsuficientesError(produto_id, 14, len(historico))
@@ -126,15 +126,15 @@ class PrevisaoController:
         if os.path.exists(caminho_modelo):
             self.modelo.carregar_modelo(caminho_modelo)
         else:
-            # Treinar modelo com os dados históricos
+                                                    
             self.modelo.treinar(historico)
 
         metricas = self.modelo.calcular_metricas(historico)
 
-        # Gerar previsão
+                        
         previsao_df = self.modelo.prever(dias_futuros)
 
-        # Salvar resumo da previsão no banco de dados
+                                                     
         data_inicio = previsao_df['data_previsao'].min().date()
         data_fim = previsao_df['data_previsao'].max().date()
         total_previsto = previsao_df['quantidade_prevista'].sum()
@@ -150,7 +150,7 @@ class PrevisaoController:
             session.add(nova_previsao)
             session.commit()
 
-        # Salvar modelo treinado em disco (para uso futuro)
+                                                           
         os.makedirs("models", exist_ok=True)
         self.modelo.salvar_modelo(f"models/modelo_previsao_produto_{produto_id}.pkl")
 

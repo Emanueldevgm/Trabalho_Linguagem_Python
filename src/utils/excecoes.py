@@ -1,4 +1,4 @@
-# src/utils/excecoes.py
+                       
 """Exceções customizadas do sistema."""
 
 class InventarioException(Exception):
@@ -20,7 +20,7 @@ class ProdutoNaoEncontradoError(InventarioException):
         super().__init__(f"Produto com ID {produto_id} não encontrado.")
 
 class ModeloNaoTreinadoError(InventarioException):
-    def __init__(self, produto_id: int = None): # pyright: ignore[reportArgumentType]
+    def __init__(self, produto_id: int = None):                                      
         msg = "Modelo de IA não treinado."
         if produto_id:
             msg = f"Modelo de IA para produto {produto_id} não treinado."

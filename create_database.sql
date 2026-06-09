@@ -1,4 +1,4 @@
--- Script SQL de criação da base de dados
+
 
 CREATE TABLE produtos (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

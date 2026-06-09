@@ -1,4 +1,4 @@
-# src/controllers/inventario_controller.py
+                                          
 """
 Controlador responsável pela lógica de negócio do inventário:
 produtos, vendas, compras e alertas de estoque.
@@ -48,6 +48,56 @@ class InventarioController:
         return self.produto_repo.listar()
 
     @log_execucao
+    def calcular_media_vendas_diarias(self, produto_id: int, dias: int = 30) -> float:
+        """Calcula a média diária de vendas para um produto num período."""
+        historico = self.venda_repo.obter_historico_por_produto(produto_id, dias=dias)
+        if historico.empty:
+            return 0.0
+        total_vendido = float(historico['quantidade'].sum())
+        return round(total_vendido / dias, 2)
+
+    @log_execucao
+    def calcular_ponto_pedido(self, produto_id: int, dias: int = 30) -> int:
+        """Aplica a fórmula de ponto de pedido a partir da demanda média e lead time."""
+        produto = self.produto_repo.obter_por_id(produto_id)
+        if not produto:
+            raise ProdutoNaoEncontradoError(produto_id)
+        media_diaria = self.calcular_media_vendas_diarias(produto_id, dias)
+        ponto_pedido = media_diaria * produto.lead_time_dias + produto.estoque_minimo
+        return int(round(ponto_pedido))
+
+    @log_execucao
+    def calcular_dias_estoque(self, produto_id: int, dias: int = 30) -> float:
+        """Calcula quantos dias o estoque atual suporta com base nas vendas médias."""
+        produto = self.produto_repo.obter_por_id(produto_id)
+        if not produto:
+            raise ProdutoNaoEncontradoError(produto_id)
+        media_diaria = self.calcular_media_vendas_diarias(produto_id, dias)
+        if media_diaria <= 0:
+            return float('inf')
+        return round(produto.estoque_atual / media_diaria, 1)
+
+    @log_execucao
+    def obter_metricas_inventario(self, produto_id: int, dias: int = 30) -> dict:
+        """Obtém métricas de estoque para análise: média, ponto de pedido e recomendação."""
+        produto = self.produto_repo.obter_por_id(produto_id)
+        if not produto:
+            raise ProdutoNaoEncontradoError(produto_id)
+        media_diaria = self.calcular_media_vendas_diarias(produto_id, dias)
+        ponto_pedido = self.calcular_ponto_pedido(produto_id, dias)
+        dias_estoque = self.calcular_dias_estoque(produto_id, dias)
+        quantidade_recomendada = max(0, ponto_pedido - produto.estoque_atual)
+
+        return {
+            'produto_id': produto_id,
+            'media_diaria': media_diaria,
+            'dias_estoque': dias_estoque,
+            'ponto_pedido': ponto_pedido,
+            'estoque_atual': produto.estoque_atual,
+            'quantidade_recomendada': quantidade_recomendada
+        }
+
+    @log_execucao
     @transacional(obter_session)
     def atualizar_produto(self, produto_id: int, session=None, **dados) -> Produto:
         """Atualiza os dados de um produto existente."""
@@ -66,14 +116,14 @@ class InventarioController:
         produto = self.produto_repo.obter_por_id(produto_id, session=session)
         if not produto:
             raise ProdutoNaoEncontradoError(produto_id)
-        if produto.estoque_atual < quantidade: # pyright: ignore[reportGeneralTypeIssues]
-            raise EstoqueInsuficienteError(produto.nome, produto.estoque_atual, quantidade) # pyright: ignore[reportArgumentType]
+        if produto.estoque_atual < quantidade:                                           
+            raise EstoqueInsuficienteError(produto.nome, produto.estoque_atual, quantidade)                                      
 
-        # Atualiza estoque
-        produto.estoque_atual -= quantidade # pyright: ignore[reportAttributeAccessIssue]
+                          
+        produto.estoque_atual -= quantidade                                              
         self.produto_repo.atualizar(produto, session=session)
 
-        # Cria registro de venda
+                                
         venda = Venda(
             produto_id=produto_id,
             quantidade=quantidade,
@@ -89,11 +139,11 @@ class InventarioController:
         if not produto:
             raise ProdutoNaoEncontradoError(produto_id)
 
-        # Atualiza estoque
-        produto.estoque_atual += quantidade # pyright: ignore[reportUnknownAttributeType]
+                          
+        produto.estoque_atual += quantidade                                              
         self.produto_repo.atualizar(produto, session=session)
 
-        # Cria registro de compra
+                                 
         compra = Compra(
             produto_id=produto_id,
             quantidade=quantidade,
@@ -109,7 +159,7 @@ class InventarioController:
         produtos = self.produto_repo.listar()
         alerta = []
         for produto in produtos:
-            ponto_pedido = ponto_pedido_dict.get(produto.id, 0) # pyright: ignore[reportArgumentType, reportCallIssue]
+            ponto_pedido = ponto_pedido_dict.get(produto.id, 0)                                                       
             if produto.estoque_atual <= ponto_pedido:
                 alerta.append(produto)
         return alerta
@@ -119,11 +169,13 @@ class InventarioController:
         produtos = self.produto_repo.listar()
         recomendacoes = []
         for produto in produtos:
-            ponto_pedido = produto.estoque_minimo + incremento_pedido
+            media_diaria = self.calcular_media_vendas_diarias(produto.id)
+            ponto_pedido = int(round(media_diaria * produto.lead_time_dias + produto.estoque_minimo))
             if produto.estoque_atual <= ponto_pedido:
-                quantidade_recomendada = max(0, ponto_pedido + produto.lead_time_dias - produto.estoque_atual)
+                quantidade_recomendada = max(0, ponto_pedido - produto.estoque_atual)
                 recomendacoes.append({
                     'produto': produto,
+                    'media_diaria': media_diaria,
                     'estoque_atual': produto.estoque_atual,
                     'ponto_pedido': ponto_pedido,
                     'quantidade_recomendada': quantidade_recomendada

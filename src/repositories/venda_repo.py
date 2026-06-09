@@ -1,9 +1,9 @@
-# src/repositories/venda_repo.py
-from typing import List # pyright: ignore[reportUnusedImport]
-from sqlalchemy import func # pyright: ignore[reportUnusedImport]
+                                
+from typing import List                                      
+from sqlalchemy import func                                      
 from src.models.venda import Venda
 from src.repositories.repositorio_base import RepositorioBase
-from src.utils.database import obter_session # pyright: ignore[reportUnusedImport]
+from src.utils.database import obter_session                                      
 import pandas as pd
 from datetime import datetime, timedelta
 
@@ -19,10 +19,10 @@ class VendaRepositorio(RepositorioBase[Venda]):
                 Venda.produto_id == produto_id,
                 Venda.data >= data_limite
             ).order_by(Venda.data).all()
-            dados = [{"data": v.data.date(), "quantidade": v.quantidade} for v in vendas] # pyright: ignore[reportUnknownVariableType]
+            dados = [{"data": v.data.date(), "quantidade": v.quantidade} for v in vendas]                                             
             if not dados:
                 return pd.DataFrame(columns=["data", "quantidade"])
-            df = pd.DataFrame(dados) # pyright: ignore[reportUnknownArgumentType]
-            # Agrupa por dia (caso haja múltiplas vendas no mesmo dia)
+            df = pd.DataFrame(dados)                                             
+                                                                      
             df = df.groupby("data", as_index=False).sum()
             return df

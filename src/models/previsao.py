@@ -1,4 +1,4 @@
-# src/models/previsao.py
+                        
 from sqlalchemy import Column, Integer, DateTime, ForeignKey, Float, Date, String
 from sqlalchemy.sql import func
 from src.models.base import Base

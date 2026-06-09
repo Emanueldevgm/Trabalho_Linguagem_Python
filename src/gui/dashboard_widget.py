@@ -1,4 +1,4 @@
-# src/gui/dashboard_widget.py
+                             
 """
 Widget de dashboard para exibir gráficos de vendas e previsão de demanda.
 """
@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QComboBox, QLabel, QMessageBox
 )
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas # pyright: ignore[reportPrivateImportUsage]
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas                                             # pyright: ignore[reportPrivateImportUsage]
 from matplotlib.figure import Figure
 import pandas as pd
 from typing import Optional
@@ -35,7 +35,7 @@ class DashboardWidget(QWidget):
         """Configura os elementos da interface."""
         layout = QVBoxLayout()
 
-        # Barra de seleção e botão
+                                  
         sel_layout = QHBoxLayout()
         self.label_produto = QLabel("Produto:")
         self.combo_produtos = QComboBox()
@@ -49,9 +49,9 @@ class DashboardWidget(QWidget):
         layout.addLayout(sel_layout)
 
         self.label_metricas = QLabel("")
+        self.label_metricas.setWordWrap(True)
         layout.addWidget(self.label_metricas)
 
-        # Canvas para gráfico matplotlib
         self.figure = Figure(figsize=(8, 4), dpi=100)
         self.canvas = FigureCanvas(self.figure)
         layout.addWidget(self.canvas)
@@ -73,16 +73,14 @@ class DashboardWidget(QWidget):
             return
 
         try:
-            # Gera a previsão para os próximos 30 dias
             previsao_df, metricas = self.previsao_controller.gerar_previsao(produto_id, dias_futuros=30)
+            metricas_inventario = self.inventario_controller.obter_metricas_inventario(produto_id, dias=30)
 
-            # Obtém o histórico real dos últimos 60 dias
             historico = self.previsao_controller.venda_repo.obter_historico_por_produto(
                 produto_id, dias=60
             )
 
-            self.plotar_grafico(historico, previsao_df, metricas)
-
+            self.plotar_grafico(historico, previsao_df, metricas, metricas_inventario)
         except Exception as e:
             QMessageBox.critical(
                 self,
@@ -94,23 +92,24 @@ class DashboardWidget(QWidget):
         self,
         historico: pd.DataFrame,
         previsao: pd.DataFrame,
-        metricas: Optional[dict] = None
+        metricas: Optional[dict] = None,
+        metricas_inventario: Optional[dict] = None
     ) -> None:
-        """Plota as vendas históricas e a previsão no mesmo gráfico."""
+        """Plota as vendas históricas, a previsão e mostra as métricas calculadas."""
         self.figure.clear()
         ax = self.figure.add_subplot(111)
 
-        # Valida e plota histórico
+                                  
         if not historico.empty and 'data' in historico.columns and 'quantidade' in historico.columns:
             datas_hist = pd.to_datetime(historico['data'])
             ax.plot(datas_hist, historico['quantidade'], 'o-', label='Vendas reais', linewidth=2)
 
-        # Valida e plota previsão
+                                 
         if not previsao.empty and 'data_previsao' in previsao.columns and 'quantidade_prevista' in previsao.columns:
             datas_prev = pd.to_datetime(previsao['data_previsao'])
             ax.plot(datas_prev, previsao['quantidade_prevista'], 's--', label='Previsão (30 dias)', linewidth=2)
 
-        # Configurações estéticas
+                                 
         ax.set_title("Demanda Histórica e Previsão de Demanda (IA)", fontsize=12)
         ax.set_xlabel("Data")
         ax.set_ylabel("Quantidade Vendida")
@@ -120,8 +119,16 @@ class DashboardWidget(QWidget):
         self.canvas.draw()
 
         if metricas:
+            dias_estoque = metricas_inventario.get('dias_estoque', float('inf')) if metricas_inventario else float('inf')
+            dias_estoque_text = "∞" if dias_estoque == float('inf') else f"{dias_estoque:.1f}"
+            estoque_text = (
+                f"Média diária: {metricas_inventario['media_diaria']:.2f} unidades | "
+                f"Dias de estoque: {dias_estoque_text} | "
+                f"Ponto de pedido: {metricas_inventario['ponto_pedido']} | "
+                f"Reposição recomendada: {metricas_inventario['quantidade_recomendada']}"
+            ) if metricas_inventario else ""
             self.label_metricas.setText(
-                f"RMSE: {metricas['rmse']:.2f}   MAE: {metricas['mae']:.2f}"
+                f"RMSE: {metricas['rmse']:.2f}   MAE: {metricas['mae']:.2f}\n{estoque_text}"
             )
         else:
             self.label_metricas.setText("")

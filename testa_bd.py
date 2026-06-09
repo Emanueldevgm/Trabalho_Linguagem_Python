@@ -1,4 +1,4 @@
-# testa_bd.py
+             
 import sys
 import os
 sys.path.insert(0, os.getcwd())
@@ -14,7 +14,7 @@ print("Criando tabelas...")
 criar_tabelas()
 print("Tabelas criadas com sucesso!")
 
-# Testa inserção de um usuário admin
+                                    
 session = obter_session()
 admin = session.query(Usuario).filter_by(username="admin").first()
 if not admin:
@@ -26,7 +26,7 @@ if not admin:
 else:
     print("Usuário admin já existe.")
 
-# Lista produtos
+                
 produtos = session.query(Produto).all()
 print(f"Total de produtos no banco: {len(produtos)}")
 

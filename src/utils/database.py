@@ -1,4 +1,4 @@
-# src/utils/database.py
+                       
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 import os
@@ -10,7 +10,7 @@ DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///data/inventario.db")
 
 os.makedirs("data", exist_ok=True)
 
-engine = create_engine(DATABASE_URL, echo=False)  # echo=True para ver SQL
+engine = create_engine(DATABASE_URL, echo=False)                          
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, expire_on_commit=False, bind=engine)
 
 Base = declarative_base()

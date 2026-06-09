@@ -1,4 +1,4 @@
-# popular_dados_teste.py
+                        
 """
 Script para gerar dados de vendas históricas fictícias para testar o módulo de IA.
 Execute apenas após cadastrar pelo menos um produto.
@@ -23,9 +23,9 @@ def gerar_vendas_teste(produto_id: int, dias: int = 60):
         vendas = []
         data_atual = data_inicio
         while data_atual <= data_fim:
-            # Simula variação de demanda: dias de semana mais vendas
+                                                                    
             qtd = random.randint(5, 30)
-            if data_atual.weekday() >= 5:  # fim de semana menos vendas
+            if data_atual.weekday() >= 5:                              
                 qtd = random.randint(2, 15)
             valor_total = qtd * produto.preco_unitario
             venda = Venda(
@@ -42,7 +42,7 @@ def gerar_vendas_teste(produto_id: int, dias: int = 60):
         print(f"{len(vendas)} vendas geradas para o produto '{produto.nome}'.")
 
 if __name__ == "__main__":
-    # Lista os produtos existentes
+                                  
     repo = ProdutoRepositorio()
     produtos = repo.listar()
     if not produtos:

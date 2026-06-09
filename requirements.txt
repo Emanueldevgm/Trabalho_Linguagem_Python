@@ -9,3 +9,6 @@ python-dotenv>=1.0.0
 bcrypt>=4.0.0    # para hash de senhas
 PyPDF2>=3.0.0    # para leitura do enunciado PDF
 pytest>=8.0.0    # testes unitários e de integração
+fastapi>=0.95.0
+uvicorn[standard]>=0.20.0
+aiofiles>=23.0.0

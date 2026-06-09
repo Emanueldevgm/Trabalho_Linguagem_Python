@@ -1,5 +1,5 @@
-# src/repositories/repositorio_base.py
-from typing import List, Generic, TypeVar, Type # type: ignore
+                                      
+from typing import List, Generic, TypeVar, Type               
 from sqlalchemy.orm import Session
 from src.models.contratos import Repositorio
 from src.utils.database import obter_session

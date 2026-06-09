@@ -1,20 +1,20 @@
-# src/utils/context_managers.py
+                               
 """Context managers personalizados."""
 import time
 import logging
 from typing import Optional, Type
 from types import TracebackType
-from sqlalchemy.orm import sessionmaker # pyright: ignore[reportUnusedImport]
+from sqlalchemy.orm import sessionmaker                                      
 
 class ConexaoBanco:
     """Gerencia sessão do banco com commit/rollback automático."""
-    def __init__(self, session_factory): # pyright: ignore[reportMissingParameterType, reportUnknownParameterType]
+    def __init__(self, session_factory):                                                                          
         self.session_factory = session_factory
         self.session = None
 
-    def __enter__(self): # pyright: ignore[reportUnknownParameterType]
-        self.session = self.session_factory() # pyright: ignore[reportUnknownMemberType]
-        return self.session # pyright: ignore[reportUnknownVariableType, reportUnknownMemberType]
+    def __enter__(self):                                              
+        self.session = self.session_factory()                                           
+        return self.session                                                                      
 
     def __exit__(
         self,
@@ -23,10 +23,10 @@ class ConexaoBanco:
         exc_tb: Optional[TracebackType],
     ) -> None:
         if exc_type:
-            self.session.rollback() # pyright: ignore[reportOptionalMemberAccess, reportUnknownMemberType]
+            self.session.rollback()                                                                       
         else:
-            self.session.commit() # pyright: ignore[reportOptionalMemberAccess, reportUnknownMemberType]
-        self.session.close() # pyright: ignore[reportOptionalMemberAccess, reportUnknownMemberType]
+            self.session.commit()                                                                       
+        self.session.close()                                                                       
 
 class Temporizador:
     """Mede tempo de execução de um bloco."""

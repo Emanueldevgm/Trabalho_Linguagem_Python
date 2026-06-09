@@ -1,4 +1,4 @@
-# src/repositories/usuario_repo.py
+                                  
 from src.models.usuario import Usuario
 from src.repositories.repositorio_base import RepositorioBase
 

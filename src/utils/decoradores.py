@@ -1,11 +1,11 @@
-# src/utils/decoradores.py
+                          
 """Decoradores personalizados para logging, transações e validações."""
 import functools
 import logging
 from src.utils.context_managers import Temporizador
 from src.utils.excecoes import EstoqueInsuficienteError, TransacaoError, ProdutoNaoEncontradoError
 
-# Configuração básica de log
+                            
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -55,8 +55,8 @@ def validar_estoque(controller_method):
     """Decorador que verifica estoque antes de registrar venda (usado em métodos do controller)."""
     @functools.wraps(controller_method)
     def wrapper(self, produto_id, quantidade, *args, **kwargs):
-        # O controller deve ter um atributo _produto_repo (ou similar)
-        produto = self.produto_repo.obter_por_id(produto_id)  # ajuste conforme seu controller
+                                                                      
+        produto = self.produto_repo.obter_por_id(produto_id)                                  
         if not produto:
             raise ProdutoNaoEncontradoError(produto_id)
         if produto.estoque_atual < quantidade:

@@ -1,4 +1,4 @@
-# src/models/usuario.py
+                       
 from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.sql import func
 from src.models.base import Base
@@ -10,7 +10,7 @@ class Usuario(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String(50), unique=True, nullable=False, index=True)
     senha_hash = Column(String(255), nullable=False)
-    perfil = Column(String(20), default="operador")  # admin, operador
+    perfil = Column(String(20), default="operador")                   
     criado_em = Column(DateTime(timezone=True), server_default=func.now())
 
     def definir_senha(self, senha_plana: str):
