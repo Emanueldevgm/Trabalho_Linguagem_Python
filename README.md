@@ -15,18 +15,6 @@ python -m venv venv
 venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 python main.py
-
-### Alternativa: executar dashboard web (FastAPI)
-
-Após instalar dependências, execute o servidor web e abra o dashboard:
-
-```powershell
-venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
-python -m uvicorn src.web.app:app --reload
-```
-
-
 ```
 
 No Bash / macOS / Linux:
@@ -38,11 +26,23 @@ pip install -r requirements.txt
 python main.py
 ```
 
+## Credenciais padrão
+
+- Usuário: `admin`
+- Senha: `admin123`
+
+## Executar testes
+
+```bash
+python -m pytest -q
+```
+
 ## Estrutura
 
 - `src/` — código-fonte (GUI, controllers, models, repositories)
 - `data/` — dados e exemplos
-- `docs/` — documentação
+- `docs/` — documentação técnica e UML
+- `models/` — modelos treinados gerados em tempo de execução
 
 ## Inteligência Artificial
 
@@ -51,6 +51,7 @@ O sistema já conta com três funcionalidades de IA:
 - Previsão de demanda (regressão) usando `src/ia/modelo_previsao.py`
   - carrega o modelo salvo em `models/modelo_previsao_produto_{produto_id}.pkl`
   - se não existir, treina a partir do histórico de vendas
+  - precisa de pelo menos 2 registros históricos para gerar a previsão
   - processa entradas com colunas `data` e `quantidade`
   - retorna um `DataFrame` com `data_previsao` e `quantidade_prevista`
 - Classificação de demanda usando `src/ia/modelo_classificacao.py`

@@ -1,5 +1,5 @@
 import pandas as pd
-from src.controllers.previsao_controller import ModeloPrevisaoDemanda
+from src.ia.modelo_previsao import ModeloPrevisaoDemanda
 
 
 def test_modelo_previsao_treina_e_prevê():

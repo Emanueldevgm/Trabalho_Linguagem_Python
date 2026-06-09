@@ -36,7 +36,7 @@ class ModeloClassificadorDemanda:
         df = df.dropna()
 
         if df.empty:
-            raise DadosInsuficientesError(0, 14, 0)
+            raise DadosInsuficientesError(0, 2, 0)
 
         q1, q2 = np.quantile(df['quantidade'], [0.33, 0.66])
         df['classe_demanda'] = np.where(
@@ -62,13 +62,13 @@ class ModeloClassificadorDemanda:
 
         df = historico.copy()
         df['data'] = pd.to_datetime(df['data'])
-        df['media_7'] = df['quantidade'].rolling(7).mean()
-        df['lag_1'] = df['quantidade'].shift(1)
-        df['lag_7'] = df['quantidade'].shift(7)
+        df['media_7'] = df['quantidade'].rolling(7, min_periods=1).mean()
+        df['lag_1'] = df['quantidade'].shift(1).fillna(0)
+        df['lag_7'] = df['quantidade'].shift(7).fillna(0)
         df = df.dropna()
 
         if df.empty:
-            raise DadosInsuficientesError(0, 14, 0)
+            raise DadosInsuficientesError(0, 2, 0)
 
         ultima_linha = df.iloc[-1]
         X_new = pd.DataFrame([ultima_linha[self.features]])

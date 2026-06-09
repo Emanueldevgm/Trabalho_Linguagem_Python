@@ -21,8 +21,8 @@ class IAController:
 
     def classificar_demanda(self, produto_id: int) -> dict[str, Any]:
         historico = self.venda_repo.obter_historico_por_produto(produto_id, dias=90)
-        if len(historico) < 14:
-            raise DadosInsuficientesError(produto_id, 14, len(historico))
+        if len(historico) < 2:
+            raise DadosInsuficientesError(produto_id, 2, len(historico))
 
         modelo_status = "carregado"
         if os.path.exists(self._caminho_modelo_classificacao):
